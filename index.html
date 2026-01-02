@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>一言メモ</title>
+
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #f3f4f6;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+  }
+
+  h1 {
+    margin-bottom: 8px;
+  }
+
+  .description {
+    font-size: 13px;
+    color: #4b5563;
+    background: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+  }
+
+  #inputBox {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  #newMemo {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+  }
+
+  #addBtn {
+    padding: 8px 14px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  #searchInput {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+
+  .memo-item {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 10px;
+  }
+
+  .memo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .memo-text {
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  .delete-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<h1>一言メモ</h1>
+
+<div class="description">
+  ・思いついたことを一言でメモできます。<br>
+  ・クリックで編集、削除もできます。<br>
+  ・検索で過去のメモを探せます。
+</div>
+
+<div id="inputBox">
+  <input type="text" id="newMemo" placeholder="一言メモを入力">
+  <button id="addBtn">追加</button>
+</div>
+
+<input type="text" id="searchInput" placeholder="検索">
+
+<div id="memoList"></div>
+
+<script>
+let memos = JSON.parse(localStorage.getItem("oneWordMemo") || "[]");
+
+/* -----------------------------
+   メモ描画
+----------------------------- */
+function renderMemos() {
+  const list = document.getElementById("memoList");
+  const keyword = document.getElementById("searchInput").value.toLowerCase();
+
+  list.innerHTML = "";
+
+  memos.forEach((memo, index) => {
+    if (!memo.text.toLowerCase().includes(keyword)) return;
+
+    const item = document.createElement("div");
+    item.className = "memo-item";
+
+    const header = document.createElement("div");
+    header.className = "memo-header";
+
+    const text = document.createElement("div");
+    text.className = "memo-text";
+    text.textContent = memo.text;
+    text.onclick = () => editMemo(index);
+
+    const del = document.createElement("button");
+    del.className = "delete-btn";
+    del.textContent = "削除";
+    del.onclick = () => deleteMemo(index);
+
+    header.appendChild(text);
+    header.appendChild(del);
+
+    item.appendChild(header);
+    list.appendChild(item);
+  });
+}
+
+/* -----------------------------
+   メモ追加
+----------------------------- */
+document.getElementById("addBtn").addEventListener("click", addMemo);
+document.getElementById("newMemo").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") addMemo();
+});
+
+function addMemo() {
+  const text = document.getElementById("newMemo").value.trim();
+  if (text === "") return;
+
+  memos.unshift({ text });
+  document.getElementById("newMemo").value = "";
+
+  save();
+  renderMemos();
+}
+
+/* -----------------------------
+   メモ編集
+----------------------------- */
+function editMemo(index) {
+  const newText = prompt("内容を編集してください", memos[index].text);
+  if (newText === null) return;
+
+  memos[index].text = newText.trim();
+  save();
+  renderMemos();
+}
+
+/* -----------------------------
+   メモ削除
+----------------------------- */
+function deleteMemo(index) {
+  const ok = confirm("このメモを削除しますか？");
+  if (!ok) return;
+
+  memos.splice(index, 1);
+  save();
+  renderMemos();
+}
+
+/* -----------------------------
+   検索
+----------------------------- */
+document.getElementById("searchInput").addEventListener("input", renderMemos);
+
+/* -----------------------------
+   保存
+----------------------------- */
+function save() {
+  localStorage.setItem("oneWordMemo", JSON.stringify(memos));
+}
+
+/* 初期描画 */
+renderMemos();
+</script>
+
+</body>
+</html>
